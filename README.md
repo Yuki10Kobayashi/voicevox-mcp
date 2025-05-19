@@ -41,7 +41,8 @@ MCPクライアントから speakers ツールでスピーカー一覧を取得�
       "command": "node",
       "args": ["${Path to Repository}/dist/index.js"],
       "env": {
-        "SPEAKER_ID": 8
+        "SPEAKER_ID": 8,
+        "SPEED_SCALE": 1.2
       }
     }
   }
