@@ -2,6 +2,10 @@
 
 このプロジェクトは、VOICEVOXエンジンと連携して音声合成やスピーカー情報の取得ができるMCP（Model Context Protocol）サーバーです。TypeScriptで実装されており、MCP SDKを利用しています。
 
+<a href="https://glama.ai/mcp/servers/@Yuki10Kobayashi/voicevox-mcp">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@Yuki10Kobayashi/voicevox-mcp/badge" alt="VOICEVOX Server MCP server" />
+</a>
+
 # 機能
 - VOICEVOXエンジンのスピーカー情報取得（/speakers）
 - 指定したスピーカーでテキストを音声合成し、ローカルで再生（/speak）
