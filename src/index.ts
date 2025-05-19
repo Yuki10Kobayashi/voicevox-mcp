@@ -6,6 +6,8 @@ import { exec } from "child_process";
 import dotenv from "dotenv";
 dotenv.config();
 
+const VOICEVOX_API_URL = process.env.VOICEVOX_API_URL || "http://localhost:50021";
+
 // Create an MCP server
 const server = new McpServer({
   name: "voicevox-mcp",
@@ -16,7 +18,7 @@ const server = new McpServer({
 server.tool("speakers",
   {},
   async () => {
-    const res = await fetch("http://localhost:50021/speakers")
+    const res = await fetch(`${VOICEVOX_API_URL}/speakers`)
     const data = await res.json()
     return {
       content: [{ type: "text", text: JSON.stringify(data) }],
@@ -25,20 +27,20 @@ server.tool("speakers",
 )
   
 server.tool("speak",
-  { speaker_id: z.number().optional(), text: z.string() },
-  async ({ speaker_id, text }) => {
-    // speaker_idが未指定なら環境変数から取得
-    const resolvedSpeakerId = speaker_id ?? Number(process.env.SPEAKER_ID);
+  { text: z.string() },
+  async ({ text }) => {
+    const resolvedSpeakerId = Number(process.env.SPEAKER_ID);
     if (!resolvedSpeakerId || isNaN(resolvedSpeakerId)) {
       throw new Error("speaker_idが指定されてないか、環境変数SPEAKER_IDが不正です");
     }
-    const res = await fetch(`http://localhost:50021/audio_query?speaker=${resolvedSpeakerId}&text=${text}`, {
+    const res = await fetch(`${VOICEVOX_API_URL}/audio_query?speaker=${resolvedSpeakerId}&text=${text}`, {
       method: "POST",
     });
     const query = await res.json();
-    query.speedScale = 1.2
+    const speedScale = process.env.SPEED_SCALE ? Number(process.env.SPEED_SCALE) : 1.2;
+    query.speedScale = speedScale;
 
-    const voiceRes = await fetch(`http://localhost:50021/synthesis?speaker=${resolvedSpeakerId}`, {
+    const voiceRes = await fetch(`${VOICEVOX_API_URL}/synthesis?speaker=${resolvedSpeakerId}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
