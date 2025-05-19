@@ -1,0 +1,6 @@
+services:
+  voicevox_engine:
+    image: voicevox/voicevox_engine:cpu-latest
+    ports:
+      - '50021:50021'
+    tty: true
