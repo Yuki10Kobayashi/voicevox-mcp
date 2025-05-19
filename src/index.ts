@@ -3,6 +3,8 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import fs from "fs";
 import { exec } from "child_process";
+import dotenv from "dotenv";
+dotenv.config();
 
 // Create an MCP server
 const server = new McpServer({
@@ -23,15 +25,20 @@ server.tool("speakers",
 )
   
 server.tool("speak",
-  { speaker_id: z.number(), text: z.string() },
+  { speaker_id: z.number().optional(), text: z.string() },
   async ({ speaker_id, text }) => {
-    const res = await fetch(`http://localhost:50021/audio_query?speaker=${speaker_id}&text=${text}`, {
+    // speaker_idが未指定なら環境変数から取得
+    const resolvedSpeakerId = speaker_id ?? Number(process.env.SPEAKER_ID);
+    if (!resolvedSpeakerId || isNaN(resolvedSpeakerId)) {
+      throw new Error("speaker_idが指定されてないか、環境変数SPEAKER_IDが不正です");
+    }
+    const res = await fetch(`http://localhost:50021/audio_query?speaker=${resolvedSpeakerId}&text=${text}`, {
       method: "POST",
     });
     const query = await res.json();
     query.speedScale = 1.2
 
-    const voiceRes = await fetch(`http://localhost:50021/synthesis?speaker=${speaker_id}`, {
+    const voiceRes = await fetch(`http://localhost:50021/synthesis?speaker=${resolvedSpeakerId}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -47,8 +54,6 @@ server.tool("speak",
     } catch (e) {
       console.error("ファイル保存エラー:", e);
     }
-
-    const base64Audio = buffer.toString("base64");
 
     // eslint-disable-next-line
     exec("afplay /tmp/voicevox.wav", (err) => {
