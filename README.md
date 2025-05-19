@@ -29,10 +29,7 @@ npm run build
 
 # 使い方
 
-MCPクライアントから speakers ツールでスピーカー一覧を取得できます。
-
 ## Cursorの設定例
-
 
 ```.cursor/mcp.json
 {
@@ -42,16 +39,19 @@ MCPクライアントから speakers ツールでスピーカー一覧を取得�
       "args": ["${Path to Repository}/dist/index.js"],
       "env": {
         "SPEAKER_ID": 8,
-        "SPEED_SCALE": 1.2
+        "SPEED_SCALE": 1.2,
+        "VOICEVOX_API_URL": "http://localhost:50021" 
       }
     }
   }
 }
 ```
 
+VOICEVOX_API_URLは必要に応じて設定
 
 
-speak ツールでテキストを音声合成し、ローカルで再生できます（afplayコマンドを使用しているため、Mac環境推奨）。
+- MCPクライアントから speakers ツールでスピーカー一覧を取得できます。
+- speak ツールでテキストを音声合成し、ローカルで再生できます（afplayコマンドを使用しているため、Mac環境推奨）。
 
 主な依存パッケージ
 

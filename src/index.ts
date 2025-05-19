@@ -4,9 +4,9 @@ import { z } from "zod";
 import fs from "fs";
 import { exec } from "child_process";
 import dotenv from "dotenv";
+import { fetchSpeakers, createAudioQuery, synthesizeVoice } from "./api.js";
 dotenv.config();
 
-const VOICEVOX_API_URL = process.env.VOICEVOX_API_URL || "http://localhost:50021";
 
 // Create an MCP server
 const server = new McpServer({
@@ -14,12 +14,32 @@ const server = new McpServer({
   version: "1.0.0",
 });
 
+// ファイル保存用関数
+function saveAudioFile(buffer: Buffer, filePath: string) {
+  try {
+    fs.writeFileSync(filePath, buffer);
+    console.log("ファイル保存成功");
+  } catch (e) {
+    console.error("ファイル保存エラー:", e);
+  }
+}
+
+// 音声再生用関数
+function playAudio(filePath: string) {
+  exec(`afplay ${filePath}`, (err) => {
+    if (err) {
+      console.error("音声再生エラー:", err);
+    } else {
+      console.log("Audio playback completed");
+    }
+  });
+}
+
 // Add an additional tool
 server.tool("speakers",
   {},
   async () => {
-    const res = await fetch(`${VOICEVOX_API_URL}/speakers`)
-    const data = await res.json()
+    const data = await fetchSpeakers();
     return {
       content: [{ type: "text", text: JSON.stringify(data) }],
     }
@@ -33,39 +53,11 @@ server.tool("speak",
     if (!resolvedSpeakerId || isNaN(resolvedSpeakerId)) {
       throw new Error("speaker_idが指定されてないか、環境変数SPEAKER_IDが不正です");
     }
-    const res = await fetch(`${VOICEVOX_API_URL}/audio_query?speaker=${resolvedSpeakerId}&text=${text}`, {
-      method: "POST",
-    });
-    const query = await res.json();
-    const speedScale = process.env.SPEED_SCALE ? Number(process.env.SPEED_SCALE) : 1.2;
-    query.speedScale = speedScale;
-
-    const voiceRes = await fetch(`${VOICEVOX_API_URL}/synthesis?speaker=${resolvedSpeakerId}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(query),
-    });
-
-    const audioBlob = await voiceRes.blob()
-    const buffer = Buffer.from(await audioBlob.arrayBuffer());
-    try {
-      fs.writeFileSync("/tmp/voicevox.wav", buffer);
-      console.log("ファイル保存成功");
-    } catch (e) {
-      console.error("ファイル保存エラー:", e);
-    }
-
-    // eslint-disable-next-line
-    exec("afplay /tmp/voicevox.wav", (err) => {
-      if (err) {
-        console.error("音声再生エラー:", err);
-      } else {
-        console.log("Audio playback completed");
-      }
-    });
-
+    const query = await createAudioQuery(text, resolvedSpeakerId);
+    const buffer = await synthesizeVoice(query, resolvedSpeakerId);
+    const filePath = "/tmp/voicevox.wav";
+    saveAudioFile(buffer, filePath);
+    playAudio(filePath);
     return {
       content: [
         {
