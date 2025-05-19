@@ -42,3 +42,6 @@ logs/
 
 # Yarn Integrity file
 .yarn-integrity 
+
+# Persona
+.cursor/rules/persona.mdc

@@ -39,10 +39,8 @@ server.tool("speak",
       body: JSON.stringify(query),
     });
 
-    // バイナリデータをBase64に変換
     const audioBlob = await voiceRes.blob()
     const buffer = Buffer.from(await audioBlob.arrayBuffer());
-    // const arrayBuffer = await audioBlob.arrayBuffer();
     try {
       fs.writeFileSync("/tmp/voicevox.wav", buffer);
       console.log("ファイル保存成功");
@@ -65,8 +63,7 @@ server.tool("speak",
       content: [
         {
           type: "text",
-          text: JSON.stringify(query),
-          // mimeType: "audio/wav"
+          text: "OK",
         }
       ]
     };
@@ -74,18 +71,5 @@ server.tool("speak",
 )
 
 
-// Add a dynamic greeting resource
-server.resource(
-  "greeting",
-  new ResourceTemplate("greeting://{name}", { list: undefined }),
-  async (uri, { name }) => ({
-    contents: [{
-      uri: uri.href,
-      text: `Hello, ${name}!`
-    }]
-  })
-);
-
-// Start receiving messages on stdin and sending messages on stdout
 const transport = new StdioServerTransport();
 await server.connect(transport);
